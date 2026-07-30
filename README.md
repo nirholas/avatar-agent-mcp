@@ -134,7 +134,7 @@ Every tool ships [MCP tool annotations](https://modelcontextprotocol.io/specific
 
 | Tool                | What it does                                                                                                                                                                                             |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pump_snapshot`     | Live market snapshot: USD price (Jupiter), 24h volume + DEX (Dexscreener), pump.fun metadata, top-holder distribution. Pass `target: "three"` for $THREE when `THREE_MINT` is set. Read-only, no signer. |
+| `pump_snapshot`     | Live market snapshot: USD price (Jupiter), 24h volume + DEX (Dexscreener), pump.fun metadata, top-holder distribution. Pass `token: "three"` for $THREE when `THREE_MINT` is set. Read-only, no signer. |
 | `pump_buy`          | Jupiter swap, direct or **Jito-bundled** (funder→buyer transfer + swap atomic). Accepts any runtime mint. **Execution.**                                                                                 |
 | `pump_launch`       | **Atomic launch** via Jito bundle: separate funder + creator wallets, both txs in the same block. Uploads metadata to pump.fun IPFS if no URI is supplied. **Execution.**                                |
 | `pump_collect_fees` | **Atomic collect**: `collectCoinCreatorFee` + drain to a safe wallet in one tx inside a Jito bundle — resistant to a leaked creator key. **Execution.**                                                  |
@@ -172,7 +172,7 @@ Per-tool environment variables (all optional — set only what you use):
 | `REPLICATE_API_TOKEN`            | `generate_avatar`                         | Replicate text/image-to-3D.                                                                                             |
 | `REPLICATE_TEXT_TO_AVATAR_MODEL` | `generate_avatar`                         | Pin a commercial-OK version, e.g. latest `tencent/hunyuan-3d-3.1`.                                                      |
 | `SOLANA_SECRET_KEY`              | `wallet_send` / `pump_buy` default signer | Per-call `secret` args override. Treat like cash.                                                                       |
-| `THREE_MINT`                     | `pump_snapshot` / `pump_buy` shorthand    | Set so tools accept `target: "three"`.                                                                                  |
+| `THREE_MINT`                     | `pump_snapshot` / `pump_buy` shorthand    | Set so `pump_snapshot` accepts `token: "three"` and `pump_buy` accepts `target: "three"`.                                                                                  |
 | `MAX_SOL_PER_TX`                 | execution tools                           | Per-transaction spend cap in SOL. Default `0.5`.                                                                        |
 | `REQUIRE_CONFIRM`                | execution tools                           | Default on: execution calls refuse until re-issued with `confirm: true`. Set `0`/`false` to disable.                    |
 
@@ -192,7 +192,7 @@ Three layers keep that power in check:
 - Sibling package: [`@three-ws/avatar-mcp`](https://www.npmjs.com/package/@three-ws/avatar-mcp) — live, read-only avatar viewer for MCP
 - Changelog: https://three.ws/changelog
 - Issues: https://github.com/nirholas/three.ws/issues
-- License: Apache-2.0 — see [LICENSE](./LICENSE)
+- License: All rights reserved. See [LICENSE](./LICENSE).
 
 ---
 

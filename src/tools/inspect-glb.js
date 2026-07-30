@@ -33,7 +33,9 @@ const outputSchema = resultShape({
 		.object({ min: vec3, max: vec3, center: vec3, size: vec3 })
 		.nullable()
 		.optional()
-		.describe('World-space bbox of the default scene; null when no positioned geometry exists.'),
+		.describe(
+			'Bind-pose bbox of the default scene, in scene units with node transforms applied and quantized positions denormalized; null when no positioned geometry exists.',
+		),
 	meshes: z
 		.array(
 			upstreamObject({
@@ -139,10 +141,15 @@ function computeWorldBbox(scene) {
 			for (const prim of mesh.listPrimitives()) {
 				const pos = prim.getAttribute('POSITION');
 				if (!pos) continue;
-				const arr = pos.getArray();
-				const stride = pos.getElementSize();
-				for (let i = 0; i < arr.length; i += stride) {
-					const v = transform([arr[i], arr[i + 1], arr[i + 2]], world);
+				// getElement() denormalizes; getArray() does not. Quantized meshes
+				// (KHR_mesh_quantization, which every three.ws avatar uses) store
+				// POSITION as normalized SHORT, so reading the raw array reported a
+				// bounding box in +/-32767 accessor units instead of world space.
+				const count = pos.getCount();
+				const el = [0, 0, 0];
+				for (let i = 0; i < count; i++) {
+					pos.getElement(i, el);
+					const v = transform(el, world);
 					if (v[0] < min[0]) min[0] = v[0];
 					if (v[1] < min[1]) min[1] = v[1];
 					if (v[2] < min[2]) min[2] = v[2];

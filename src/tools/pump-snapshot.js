@@ -17,7 +17,15 @@ export const def = {
 	description:
 		'Live snapshot for a Solana token (SPL or pump.fun): USD price (Jupiter), 24h volume + primary DEX (Dexscreener), pump.fun metadata (name/symbol/image/socials/mcap), and top-holder distribution from Solana RPC. Optional Helius DAS supply when HELIUS_API_KEY is configured. Free — no signer.',
 	inputSchema: {
-		token: z.string().min(32).max(64).describe('Base58 Solana mint address. Pass "three" or omit to use the $three reference mint (THREE_MINT env).').optional(),
+		// The schema has to admit the shortcut it documents. A flat min(32)
+		// rejected "three" during argument validation, so the handler branch
+		// below could never run and the documented shortcut always errored.
+		token: z
+			.union([z.enum(['three', '$three']), z.string().min(32).max(64)])
+			.describe(
+				'Base58 Solana mint address. Pass "three" or omit to use the $three reference mint (THREE_MINT env).',
+			)
+			.optional(),
 	},
 	async handler(args) {
 		let mint = args?.token;

@@ -58,10 +58,10 @@
 	},
 	"dependencies": {
 		"@gltf-transform/core": "^4.3.0",
-		"@grpc/grpc-js": "^1.14.4",
-		"@grpc/proto-loader": "^0.8.1",
 		"@gltf-transform/extensions": "^4.3.0",
 		"@gltf-transform/functions": "^4.3.0",
+		"@grpc/grpc-js": "^1.14.4",
+		"@grpc/proto-loader": "^0.8.1",
 		"@modelcontextprotocol/sdk": "^1.29.0",
 		"@nirholas/pump-sdk": "^1.30.0",
 		"@solana/spl-token": "^0.4.14",
@@ -71,6 +71,7 @@
 		"ethers": "^6.16.0",
 		"form-data": "^4.0.5",
 		"gltf-validator": "^2.0.0-dev.3.10",
+		"meshoptimizer": "^1.2.0",
 		"zod": "^3.23.8"
 	}
 }

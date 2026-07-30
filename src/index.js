@@ -97,7 +97,7 @@ export function buildServer() {
 				'render_avatar (pose + camera orbit + ARKit-52 expression → real PNG) → speak. generate_avatar text/image-to-3D ' +
 				'via Replicate. wallet_create (optional vanity grinder) gives the avatar a Solana wallet; wallet_balance, ' +
 				'wallet_send for SOL ops. ' +
-				'pump.fun: pump_snapshot for live market data (target="three" for $three); pump_buy via Jupiter, optional Jito ' +
+				'pump.fun: pump_snapshot for live market data (token="three" for $three); pump_buy via Jupiter, optional Jito ' +
 				'bundle; pump_launch is an atomic Jito-bundled launch with separate funder + creator; pump_collect_fees drains ' +
 				'pump.fun creator-fee vaults atomically. ens_sns_resolve for .eth / .sol names.',
 		},
