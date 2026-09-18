@@ -20,6 +20,15 @@
 // This is the "real launch" path: the on-chain `creator` field on the mint
 // is the creator wallet, not the funder. That matters because pump.fun's
 // creator-fee accrual follows the creator key.
+//
+// Pump SDK 2 (program upgrade of 2026-09): pass `holderReward: true` to make
+// the coin a holder-reward coin. The program then records the mint's
+// holder-rewards PDA as the creator, so creator fees are distributed to token
+// holders instead of accruing to the creator wallet (pump_collect_fees has
+// nothing to collect for such a coin). Holder-reward launches are gated by
+// Global.isHolderRewardEnabled (program error 6084 when off), which we check
+// before signing anything. Cashback launches are retired: create_v2 rejects
+// them with 6082, so we refuse them up front with code `cashback_deprecated`.
 
 import {
 	Keypair,
@@ -107,7 +116,9 @@ export async function atomicLaunch({
 	priorityMicroLamports = 2_000_000,
 	mayhemMode = false,
 	cashback = false,
+	holderReward = false,
 }) {
+	if (cashback) throw cashbackDeprecatedError();
 	if (!name) throw new Error('atomicLaunch: name is required');
 	if (!symbol) throw new Error('atomicLaunch: symbol is required');
 	if (!uri) throw new Error('atomicLaunch: uri is required (call uploadPumpMetadata first or pass an existing one)');
@@ -132,18 +143,26 @@ export async function atomicLaunch({
 		? Keypair.fromSecretKey(bs58decode(mintSecret))
 		: Keypair.generate();
 
-	// pump-sdk is a CJS module — import dynamically so this file can stay ESM.
-	const pumpSdkPkg = await import('@nirholas/pump-sdk');
-	const mod = pumpSdkPkg.default && Object.keys(pumpSdkPkg).length <= 1 ? pumpSdkPkg.default : pumpSdkPkg;
-	const PUMP_SDK = mod.PUMP_SDK || pumpSdkPkg.PUMP_SDK || pumpSdkPkg.default?.PUMP_SDK;
-	if (!PUMP_SDK || typeof PUMP_SDK.createV2Instruction !== 'function') {
-		throw new Error('@nirholas/pump-sdk: PUMP_SDK.createV2Instruction not found in installed version');
-	}
-	if (wantDevBuy && typeof PUMP_SDK.createV2AndBuyInstructions !== 'function') {
-		throw new Error('@nirholas/pump-sdk: PUMP_SDK.createV2AndBuyInstructions not found — dev buy unsupported in this version');
-	}
-
 	const conn = getConnection();
+
+	// Build the create (+ dev buy) instructions first. Every gate (cashback
+	// refusal, holder-reward global switch, SDK capability) fails here, before
+	// the funder signs anything or a Jito tip is committed.
+	const built = await buildLaunchInstructions({
+		conn,
+		mint: mint.publicKey,
+		creator: creator.publicKey,
+		name,
+		symbol,
+		uri,
+		devBuySol,
+		slippageBps,
+		mayhemMode,
+		holderReward,
+	});
+	const tx2Instructions = built.instructions;
+	const devBuyQuote = built.devBuyQuote;
+
 	const funderBal = await conn.getBalance(funder.publicKey, 'confirmed');
 	// Creator must cover rent + the dev-buy spend; funder covers all of that + tip
 	// + its own fees, with a small headroom for transaction fees on both txs.
@@ -172,63 +191,6 @@ export async function atomicLaunch({
 	}).compileToV0Message();
 	const tx1 = new VersionedTransaction(tx1Msg);
 	tx1.sign([funder]);
-
-	// Tx 2: create — plus, when requested, the creator's first buy in the same
-	// instruction set so it lands atomically with the mint. We quote the curve
-	// from a fresh-token state (no supply / no curve yet) and apply slippage to
-	// the minimum-tokens-out so block-level rounding can't bounce the buy.
-	let tx2Instructions;
-	let devBuyQuote = null;
-	if (wantDevBuy) {
-		const onlineMod = mod.OnlinePumpSdk || pumpSdkPkg.OnlinePumpSdk;
-		const getBuyTokenAmountFromSolAmount = mod.getBuyTokenAmountFromSolAmount || pumpSdkPkg.getBuyTokenAmountFromSolAmount;
-		if (typeof onlineMod !== 'function' || typeof getBuyTokenAmountFromSolAmount !== 'function') {
-			throw new Error('@nirholas/pump-sdk: OnlinePumpSdk / getBuyTokenAmountFromSolAmount not found — dev buy unsupported in this version');
-		}
-		const online = new onlineMod(conn);
-		const [global, feeConfig] = await Promise.all([online.fetchGlobal(), online.fetchFeeConfig()]);
-		const devBuyLamports = new BN(Math.floor(devBuySol * LAMPORTS_PER_SOL));
-		// Fresh token: mintSupply/bondingCurve null → SDK uses the initial curve.
-		const expectedTokens = getBuyTokenAmountFromSolAmount({
-			global,
-			feeConfig,
-			mintSupply: null,
-			bondingCurve: null,
-			amount: devBuyLamports,
-		});
-		const minTokens = expectedTokens.muln(10_000 - slippageBps).divn(10_000);
-		tx2Instructions = await PUMP_SDK.createV2AndBuyInstructions({
-			global,
-			mint: mint.publicKey,
-			name,
-			symbol,
-			uri,
-			creator: creator.publicKey,
-			user: creator.publicKey,
-			amount: minTokens,
-			solAmount: devBuyLamports,
-			mayhemMode,
-			cashback,
-		});
-		devBuyQuote = {
-			devBuySol,
-			slippageBps,
-			expectedTokens: expectedTokens.toString(),
-			minTokensOut: minTokens.toString(),
-		};
-	} else {
-		const createIx = await PUMP_SDK.createV2Instruction({
-			mint: mint.publicKey,
-			name,
-			symbol,
-			uri,
-			creator: creator.publicKey,
-			user: creator.publicKey,
-			mayhemMode,
-			cashback,
-		});
-		tx2Instructions = [createIx];
-	}
 
 	const tx2Msg = new TransactionMessage({
 		payerKey: creator.publicKey,
@@ -261,6 +223,10 @@ export async function atomicLaunch({
 		mint: mint.publicKey.toBase58(),
 		mintSecret: bs58encode(mint.secretKey),
 		creator: creator.publicKey.toBase58(),
+		holderReward: built.holderReward,
+		// The on-chain creator: the holder-rewards PDA for a holder-reward coin
+		// (fees go to holders), otherwise the creator wallet.
+		onChainCreator: built.onChainCreator,
 		funder: funder.publicKey.toBase58(),
 		devBuy: devBuyQuote,
 		tx1Signature: sig1,
@@ -271,4 +237,141 @@ export async function atomicLaunch({
 		fundingTxExplorer: `https://solscan.io/tx/${sig1}`,
 		createTxExplorer: `https://solscan.io/tx/${sig2}`,
 	};
+}
+
+// Build the pump.fun create_v2 instruction set for a launch: create alone, or
+// create + extend + ATA + the creator's first buy when devBuySol > 0. Pure
+// instruction building plus read-only RPC (Global, FeeConfig); it never signs
+// or sends, so it doubles as a dry run. Returns the instructions, the dev-buy
+// quote, and the on-chain creator key the program will record.
+export async function buildLaunchInstructions({
+	conn,
+	mint,
+	creator,
+	name,
+	symbol,
+	uri,
+	devBuySol = 0,
+	slippageBps = 500,
+	mayhemMode = false,
+	cashback = false,
+	holderReward = false,
+}) {
+	if (cashback) throw cashbackDeprecatedError();
+	holderReward = holderReward === true;
+	devBuySol = Number(devBuySol);
+	if (!Number.isFinite(devBuySol) || devBuySol < 0) devBuySol = 0;
+	const wantDevBuy = devBuySol > 0;
+	slippageBps = Math.min(Math.max(Math.floor(Number(slippageBps) || 0), 1), 10_000);
+
+	// pump-sdk is a CJS module, so import it dynamically to keep this file ESM.
+	const pumpSdkPkg = await import('@nirholas/pump-sdk');
+	const mod = pumpSdkPkg.default && Object.keys(pumpSdkPkg).length <= 1 ? pumpSdkPkg.default : pumpSdkPkg;
+	const PUMP_SDK = mod.PUMP_SDK || pumpSdkPkg.PUMP_SDK || pumpSdkPkg.default?.PUMP_SDK;
+	if (!PUMP_SDK || typeof PUMP_SDK.createV2Instruction !== 'function') {
+		throw new Error('@nirholas/pump-sdk: PUMP_SDK.createV2Instruction not found in installed version');
+	}
+	if (wantDevBuy && typeof PUMP_SDK.createV2AndBuyInstructions !== 'function') {
+		throw new Error('@nirholas/pump-sdk: PUMP_SDK.createV2AndBuyInstructions not found, dev buy unsupported in this version');
+	}
+
+	// The dev-buy quote and the holder-reward gate both need the live Global
+	// account. createV2Instruction alone does not check the gate, so we do,
+	// instead of letting the program reject the bundle with 6084.
+	let online = null;
+	let global = null;
+	if (wantDevBuy || holderReward) {
+		const onlineMod = mod.OnlinePumpSdk || pumpSdkPkg.OnlinePumpSdk;
+		if (typeof onlineMod !== 'function') {
+			throw new Error('@nirholas/pump-sdk: OnlinePumpSdk not found in installed version');
+		}
+		online = new onlineMod(conn);
+		global = await online.fetchGlobal();
+	}
+	if (holderReward && !global.isHolderRewardEnabled) throw holderRewardDisabledError();
+	const onChainCreator = holderReward ? resolveHolderRewardsPda(mod, pumpSdkPkg, mint) : creator;
+
+	// With a dev buy, the creator's first buy rides in the same instruction set
+	// so it lands atomically with the mint. We quote the curve from a
+	// fresh-token state (no supply, no curve yet) and apply slippage to the
+	// minimum tokens out so block-level rounding can't bounce the buy.
+	let instructions;
+	let devBuyQuote = null;
+	if (wantDevBuy) {
+		const getBuyTokenAmountFromSolAmount = mod.getBuyTokenAmountFromSolAmount || pumpSdkPkg.getBuyTokenAmountFromSolAmount;
+		if (typeof getBuyTokenAmountFromSolAmount !== 'function') {
+			throw new Error('@nirholas/pump-sdk: getBuyTokenAmountFromSolAmount not found, dev buy unsupported in this version');
+		}
+		const feeConfig = await online.fetchFeeConfig();
+		const devBuyLamports = new BN(Math.floor(devBuySol * LAMPORTS_PER_SOL));
+		const expectedTokens = getBuyTokenAmountFromSolAmount({
+			global,
+			feeConfig,
+			mintSupply: null,
+			bondingCurve: null,
+			amount: devBuyLamports,
+		});
+		const minTokens = expectedTokens.muln(10_000 - slippageBps).divn(10_000);
+		// The SDK routes the buy's creator-vault account to the holder-rewards
+		// PDA itself when holderReward is set; we pass the creator wallet.
+		instructions = await PUMP_SDK.createV2AndBuyInstructions({
+			global,
+			mint,
+			name,
+			symbol,
+			uri,
+			creator,
+			user: creator,
+			amount: minTokens,
+			solAmount: devBuyLamports,
+			mayhemMode,
+			holderReward,
+		});
+		devBuyQuote = {
+			devBuySol,
+			slippageBps,
+			expectedTokens: expectedTokens.toString(),
+			minTokensOut: minTokens.toString(),
+		};
+	} else {
+		instructions = [
+			await PUMP_SDK.createV2Instruction({
+				mint,
+				name,
+				symbol,
+				uri,
+				creator,
+				user: creator,
+				mayhemMode,
+				holderReward,
+			}),
+		];
+	}
+	return { instructions, devBuyQuote, holderReward, onChainCreator: onChainCreator.toBase58(), wantDevBuy };
+}
+
+// Build the same error shape the MCP tool reports, so callers can branch on
+// `code` without importing SDK error classes.
+export function cashbackDeprecatedError() {
+	const err = new Error(
+		'Cashback launches are retired: the pump.fun program rejects them (error 6082). Launch with holderReward: true to share creator fees with holders instead.',
+	);
+	err.code = 'cashback_deprecated';
+	return err;
+}
+
+function holderRewardDisabledError() {
+	const err = new Error(
+		'Holder-reward launches are currently disabled in the pump.fun Global account (isHolderRewardEnabled = false, program error 6084). Retry later or launch without holderReward.',
+	);
+	err.code = 'holder_reward_disabled';
+	return err;
+}
+
+function resolveHolderRewardsPda(mod, pkg, mintPk) {
+	const derive = mod.holderRewardsPda || pkg.holderRewardsPda;
+	if (typeof derive !== 'function') {
+		throw new Error('@nirholas/pump-sdk: holderRewardsPda not found; holder-reward launches need @nirholas/pump-sdk >= 2.0.0');
+	}
+	return derive(mintPk);
 }

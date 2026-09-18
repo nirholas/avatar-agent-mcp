@@ -136,7 +136,7 @@ Every tool ships [MCP tool annotations](https://modelcontextprotocol.io/specific
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pump_snapshot`     | Live market snapshot: USD price (Jupiter), 24h volume + DEX (Dexscreener), pump.fun metadata, top-holder distribution. Pass `token: "three"` for $THREE when `THREE_MINT` is set. Read-only, no signer. |
 | `pump_buy`          | Jupiter swap, direct or **Jito-bundled** (funder→buyer transfer + swap atomic). Accepts any runtime mint. **Execution.**                                                                                 |
-| `pump_launch`       | **Atomic launch** via Jito bundle: separate funder + creator wallets, both txs in the same block. Uploads metadata to pump.fun IPFS if no URI is supplied. **Execution.**                                |
+| `pump_launch`       | **Atomic launch** via Jito bundle: separate funder + creator wallets, both txs in the same block. Optional atomic dev buy, optional `holderReward: true` holder-reward coin. Uploads metadata to pump.fun IPFS if no URI is supplied. **Execution.** |
 | `pump_collect_fees` | **Atomic collect**: `collectCoinCreatorFee` + drain to a safe wallet in one tx inside a Jito bundle — resistant to a leaked creator key. **Execution.**                                                  |
 
 ### Identity
@@ -150,6 +150,8 @@ Every tool ships [MCP tool annotations](https://modelcontextprotocol.io/specific
 The `pump_launch` and `pump_collect_fees` tools wrap two patterns:
 
 - **Launch** — the create tx's `payerKey` is the **creator** wallet, so the on-chain `creator` field (which receives pump.fun creator fees forever) is the creator wallet. The creator does not need to hold SOL: the funder transfers rent + tip in Tx1 of the same Jito bundle. Either both txs land or neither does.
+- **Holder rewards** (Pump SDK 2): pass `holderReward: true` to `pump_launch` and the program records the mint's holder-rewards PDA as the creator, so creator fees are distributed to token holders instead of the creator wallet. The launch result reports it as `onChainCreator`. Holder-reward launches depend on the pump.fun Global switch `isHolderRewardEnabled`; the tool reads it before signing and returns `holder_reward_disabled` when it is off, so no Jito tip is spent on a bundle the program would reject (error 6084). A holder-reward coin has no creator vault, so `pump_collect_fees` does not apply to it.
+- **Cashback is retired.** The upgraded pump.fun program rejects new cashback coins (error 6082). `pump_launch` refuses `cashback: true` up front with `cashback_deprecated`, before any upload or signature. Trading existing cashback coins is unaffected.
 - **Collect** — even if a creator key is shared or leaked, collect-and-drain runs as a single tx inside a Jito bundle, so no competing collector can interleave a tx between `collectCoinCreatorFee` and the drain.
 
 If you start hitting `Bundles must write lock at least one tip account`, the [Jito tip-account list](https://docs.jito.wtf/) has rotated.
