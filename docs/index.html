@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>@three-ws/avatar-agent: 3D AI Agent Avatar</title>
+<meta name="description" content="3D AI Agent Avatar — MCP server that spawns a textured GLB avatar, inspects/validates/optimizes any 3D model, gives the agent a Solana wallet + a voice, and ships full pump.fun powers (atomic Jito-bundled launches + creator-fee collection). Powered by three.ws.">
+<link rel="canonical" href="https://nirholas.github.io/avatar-agent-mcp/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="three.ws">
+<meta property="og:title" content="@three-ws/avatar-agent">
+<meta property="og:description" content="3D AI Agent Avatar — MCP server that spawns a textured GLB avatar, inspects/validates/optimizes any 3D model, gives the agent a Solana wallet + a voice, and ships full pump.fun powers (atomic Jito-bundled launches + creator-fee collection). Powered by three.ws.">
+<meta property="og:url" content="https://nirholas.github.io/avatar-agent-mcp/">
+<meta property="og:image" content="https://nirholas.github.io/avatar-agent-mcp/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="@three-ws/avatar-agent">
+<meta name="twitter:description" content="3D AI Agent Avatar — MCP server that spawns a textured GLB avatar, inspects/validates/optimizes any 3D model, gives the agent a Solana wallet + a voice, and ships full pump.fun powers (atomic Jito-bundled launches + creator-fee collection). Powered by three.ws.">
+<meta name="twitter:image" content="https://nirholas.github.io/avatar-agent-mcp/og.png">
+<meta name="keywords" content="mcp, model-context-protocol, three.ws, avatar, 3d, glb, solana, pump.fun, jito, atomic-bundle, wallet, tts, ai-agent, agent-payments, $three, mcp-server, ai-agents">
+<link rel="alternate" type="text/plain" href="llms.txt" title="llms.txt">
+<link rel="icon" href="https://three.ws/three-ws-mcp-icon.svg" type="image/svg+xml">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"@three-ws/avatar-agent","description":"3D AI Agent Avatar — MCP server that spawns a textured GLB avatar, inspects/validates/optimizes any 3D model, gives the agent a Solana wallet + a voice, and ships full pump.fun powers (atomic Jito-bundled launches + creator-fee collection). Powered by three.ws.","codeRepository":"https://github.com/nirholas/avatar-agent-mcp","programmingLanguage":"JavaScript","license":"https://spdx.org/licenses/Apache-2.0.html","version":"1.2.3","url":"https://nirholas.github.io/avatar-agent-mcp/","author":{"@type":"Organization","name":"three.ws","url":"https://three.ws"},"keywords":"mcp, model-context-protocol, three.ws, avatar, 3d, glb, solana, pump.fun, jito, atomic-bundle, wallet, tts, ai-agent, agent-payments, $three, mcp-server, ai-agents"}</script>
+<style>:root{--bg:#fff;--fg:#111418;--mut:#586069;--line:#e3e6ea;--acc:#2563eb;--code:#f4f6f8;--card:#fafbfc}
+@media(prefers-color-scheme:dark){:root{--bg:#0b0d10;--fg:#e8eaed;--mut:#9aa3ad;--line:#232830;--acc:#6ea0ff;--code:#14181d;--card:#10141a}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--acc)}a:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+header.bar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-weight:700;text-decoration:none;color:var(--fg)}
+.bar nav{margin-left:auto;display:flex;gap:16px;font-size:14px}
+.bar nav a{color:var(--mut);text-decoration:none;transition:color .15s}.bar nav a:hover{color:var(--fg)}
+.hero{max-width:1100px;margin:0 auto;padding:48px 16px 24px}
+.hero h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:0 0 12px;letter-spacing:-.02em}
+.hero p{color:var(--mut);max-width:70ch;font-size:18px;margin:0 0 24px}
+.install{display:flex;align-items:center;gap:8px;max-width:620px;background:var(--code);border:1px solid var(--line);border-radius:10px;padding:6px 6px 6px 14px}
+.install code{flex:1;overflow-x:auto;white-space:nowrap;font:14px ui-monospace,SFMono-Regular,Menlo,monospace}
+.install button{border:0;background:var(--acc);color:#fff;border-radius:7px;padding:8px 14px;font:600 13px system-ui;cursor:pointer;transition:transform .12s,opacity .12s}
+.install button:hover{opacity:.9}.install button:active{transform:scale(.96)}
+.cta{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.cta a{padding:9px 16px;border:1px solid var(--line);border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;color:var(--fg);transition:border-color .15s,transform .15s}
+.cta a:hover{border-color:var(--acc);transform:translateY(-1px)}.cta a.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.layout{max-width:1100px;margin:0 auto;padding:8px 16px 64px;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:40px}
+@media(max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}.toc{display:none}}
+.toc{position:sticky;top:76px;align-self:start;font-size:14px;border-left:1px solid var(--line);padding-left:16px}
+.toc p{margin:0 0 8px;font-weight:700;color:var(--mut);text-transform:uppercase;font-size:12px;letter-spacing:.06em}
+.toc ul{list-style:none;margin:0;padding:0}.toc li{margin:6px 0}.toc a{color:var(--mut);text-decoration:none}.toc a:hover{color:var(--fg)}
+main{min-width:0;overflow-wrap:anywhere}main pre code{overflow-wrap:normal}main img{max-width:100%;height:auto}
+main h2{margin-top:2.2em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+.anchor{margin-left:-1.1em;padding-right:.4em;text-decoration:none;opacity:0;color:var(--mut)}h2:hover .anchor,h3:hover .anchor,h4:hover .anchor{opacity:1}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:14px;line-height:1.5}
+code{font:0.9em ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--code);padding:.15em .35em;border-radius:5px}pre code{background:none;padding:0}
+table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%}th,td{border:1px solid var(--line);padding:8px 12px;text-align:left}th{background:var(--card)}
+blockquote{margin:1em 0;padding:.2em 1em;border-left:4px solid var(--line);color:var(--mut)}
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:14px}
+.foot-in{max-width:1100px;margin:0 auto;padding:24px 16px;display:flex;gap:16px;flex-wrap:wrap}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}</style>
+</head>
+<body>
+<header class="bar"><div class="bar-in">
+<a class="brand" href="https://nirholas.github.io/avatar-agent-mcp/">@three-ws/avatar-agent</a>
+<nav aria-label="Project links"><a href="https://github.com/nirholas/avatar-agent-mcp">GitHub</a><a href="https://www.npmjs.com/package/@three-ws/avatar-agent">npm</a><a href="llms.txt">llms.txt</a><a href="https://three.ws">three.ws</a></nav>
+</div></header>
+<section class="hero">
+<h1>@three-ws/avatar-agent</h1>
+<p>3D AI Agent Avatar — MCP server that spawns a textured GLB avatar, inspects/validates/optimizes any 3D model, gives the agent a Solana wallet + a voice, and ships full pump.fun powers (atomic Jito-bundled launches + creator-fee collection). Powered by three.ws.</p>
+<div class="install" role="group" aria-label="Install command"><code>npx -y @three-ws/avatar-agent</code><button type="button" data-copy="npx -y @three-ws/avatar-agent">Copy</button></div>
+<div class="cta"><a class="pri" href="https://github.com/nirholas/avatar-agent-mcp">View on GitHub</a><a href="https://github.com/nirholas/avatar-agent-mcp/stargazers">Star the repo</a><a href="https://registry.modelcontextprotocol.io/?q=io.github.nirholas%2F3D-AI-Agent-Avatar">MCP Registry</a></div>
+</section>
+<div class="layout">
+<main id="content"><p align="center"><strong>An MCP server that turns any GLB into a 3D AI agent — inspect/validate/optimize models, then give one a Solana wallet, a voice, and pump.fun powers.</strong></p><p align="center">
+  <a href="https://www.npmjs.com/package/@three-ws/avatar-agent"><img alt="npm" src="https://img.shields.io/npm/v/@three-ws/avatar-agent?logo=npm&color=cb3837"></a>
+  <a href="https://www.npmjs.com/package/@three-ws/avatar-agent"><img alt="downloads" src="https://img.shields.io/npm/dm/@three-ws/avatar-agent?color=cb3837"></a>
+  <img alt="license" src="https://img.shields.io/npm/l/@three-ws/avatar-agent?color=3b82f6">
+  <img alt="node" src="https://img.shields.io/node/v/@three-ws/avatar-agent?color=339933&logo=node.js">
+  <a href="https://modelcontextprotocol.io"><img alt="mcp" src="https://img.shields.io/badge/Model%20Context%20Protocol-✓-9945FF"></a>
+  <a href="https://registry.modelcontextprotocol.io/?q=io.github.nirholas"><img alt="MCP Registry" src="https://img.shields.io/badge/MCP%20Registry-io.github.nirholas-0ea5e9"></a>
+</p><p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#setup">Setup</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#tools">Tools</a> ·
+  <a href="#requirements">Requirements</a> ·
+  <a href="https://three.ws">three.ws</a>
+</p><hr>
+<blockquote>
+<p>A single <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server that is two things at once. It is a general-purpose <strong>3D toolkit</strong> — <code>inspect_glb</code>, <code>validate_glb</code>, <code>optimize_glb</code>, <code>thumbnail_glb</code>, and <code>viewer_url</code> work on any GLB/glTF model, no avatar required, powered by <code>@gltf-transform/core</code> and Khronos&#39;s official <code>gltf-validator</code>. It is also a <strong>3D AI agent in a box</strong> — spawn a textured GLB avatar, give it a voice (OpenAI TTS), hand it a Solana wallet, and run pump.fun operations (Jupiter swaps, atomic Jito-bundled launches, creator-fee collection). Built and maintained by <a href="https://three.ws">three.ws</a>. Registry name: <code>io.github.nirholas/3D-AI-Agent-Avatar</code>.</p>
+</blockquote>
+<p>For a lightweight, read-only avatar viewer (no wallet, no signing), see the sibling package <a href="https://www.npmjs.com/package/@three-ws/avatar-mcp"><code>@three-ws/avatar-mcp</code></a>, which renders a live, rotatable on-chain avatar inline in the chat.</p>
+<h2 id="install"><a class="anchor" href="#install" aria-label="Link to this section">#</a>Install</h2>
+<pre><code class="language-bash">npm install @three-ws/avatar-agent
+</code></pre>
+<p>Run it directly with <code>npx</code> (no install needed) or install globally for the CLI:</p>
+<pre><code class="language-bash">npx -y @three-ws/avatar-agent          # MCP stdio server
+npm install -g @three-ws/avatar-agent  # exposes `three-avatar-agent`
+</code></pre>
+<h2 id="setup"><a class="anchor" href="#setup" aria-label="Link to this section">#</a>Setup</h2>
+<p>Add the server to your MCP client. <strong>Claude Code</strong>, one line:</p>
+<pre><code class="language-bash">claude mcp add avatar-agent -- npx -y @three-ws/avatar-agent
+</code></pre>
+<p><strong>Claude Desktop / Cursor</strong> (JSON config):</p>
+<pre><code class="language-json">{
+	&quot;mcpServers&quot;: {
+		&quot;avatar-agent&quot;: {
+			&quot;command&quot;: &quot;npx&quot;,
+			&quot;args&quot;: [&quot;-y&quot;, &quot;@three-ws/avatar-agent&quot;],
+			&quot;env&quot;: {
+				&quot;SOLANA_RPC_URL&quot;: &quot;https://api.mainnet-beta.solana.com&quot;,
+				&quot;OPENAI_API_KEY&quot;: &quot;sk-...&quot;,
+				&quot;REPLICATE_API_TOKEN&quot;: &quot;r8_...&quot;
+			}
+		}
+	}
+}
+</code></pre>
+<p>The 3D tools (<code>inspect_glb</code>, <code>validate_glb</code>, <code>optimize_glb</code>, <code>thumbnail_glb</code>, <code>viewer_url</code>) and <code>pump_snapshot</code> work with <strong>no environment variables</strong>. Voice, generation, and signing tools need the keys in <a href="#requirements">Requirements</a>. Restart your client after editing the config.</p>
+<p>Inspect the full tool surface in a GUI:</p>
+<pre><code class="language-bash">npx -y @modelcontextprotocol/inspector npx -y @three-ws/avatar-agent
+</code></pre>
+<h2 id="quick-start"><a class="anchor" href="#quick-start" aria-label="Link to this section">#</a>Quick start</h2>
+<p>Once connected, ask your client in plain language:</p>
+<blockquote>
+<p>Inspect <code>https://three.ws/avatars/cz.glb</code> — how many triangles? Then validate it against the Khronos spec and optimize it with Draco.</p>
+</blockquote>
+<p>Runs <code>inspect_glb</code> → <code>validate_glb</code> → <code>optimize_glb({ draco: true })</code>, returning the rewritten GLB inline with honest before/after sizes. Note that <code>cz.glb</code> already ships <code>EXT_meshopt_compression</code> + WebP textures, so re-encoding it with Draco reports a <strong>negative</strong> <code>savedBytes</code>: the pipeline never hides that, and an uncompressed source is where the wins actually are.</p>
+<blockquote>
+<p>Spawn the <code>cz</code> avatar, give him shades, mint him a <code>three</code>-prefixed Solana wallet, pull a snapshot of $THREE, and have him say &quot;we&#39;re so back.&quot;</p>
+</blockquote>
+<p>Runs <code>spawn_avatar</code> → <code>dress_avatar</code> → <code>wallet_create({ vanityPrefix: &quot;three&quot; })</code> → <code>pump_snapshot</code> → <code>speak</code>.</p>
+<h2 id="tools"><a class="anchor" href="#tools" aria-label="Link to this section">#</a>Tools</h2>
+<p>All <!-- mcp-count:avatar-agent-mcp.tools -->24<!-- /mcp-count --> tools are free MCP tools: there is no per-call x402 charge. Tools marked <strong>execution</strong> sign and broadcast real Solana transactions that move real funds; configure your client&#39;s tool-approval flow for them.</p>
+<p>Every tool ships <a href="https://modelcontextprotocol.io/specification/2025-06-18/server/tools#tool-annotations">MCP tool annotations</a>: reads advertise <code>readOnlyHint: true</code>, and the four execution tools (<code>wallet_send</code>, <code>pump_buy</code>, <code>pump_launch</code>, <code>pump_collect_fees</code>) are flagged <code>destructiveHint: true</code>, so annotation-aware MCP clients prompt for confirmation before running them. The hints are advisory — the server-side <code>REQUIRE_CONFIRM</code> gate and spend caps (see <a href="#safety">Safety</a>) apply regardless of client.</p>
+<h3 id="3d-toolkit-works-on-any-glb-no-avatar-required"><a class="anchor" href="#3d-toolkit-works-on-any-glb-no-avatar-required" aria-label="Link to this section">#</a>3D toolkit — works on any GLB, no avatar required</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>inspect_glb</code></td>
+<td>Mesh / material / texture / animation / skin breakdown, bounding box, vertex and triangle counts. <code>@gltf-transform/core</code>.</td>
+</tr>
+<tr>
+<td><code>validate_glb</code></td>
+<td>Runs Khronos&#39;s official <code>gltf-validator</code>; returns errors, warnings, infos, hints with JSON pointers.</td>
+</tr>
+<tr>
+<td><code>optimize_glb</code></td>
+<td>Dedup → prune → weld → optional Draco. Returns the rewritten bytes inline with before/after sizes and a signed <code>savedBytes</code> (negative when re-encoding an already-compressed model costs more than it saves). Draco- and meshopt-compressed inputs are decoded on read, so a compressed avatar works like any other.</td>
+</tr>
+<tr>
+<td><code>thumbnail_glb</code></td>
+<td>Renders any GLB to a PNG via three.ws&#39;s hosted three-light rig + auto-framing camera. Returns base64 PNG inline.</td>
+</tr>
+<tr>
+<td><code>viewer_url</code></td>
+<td>Builds a <code>three.ws/viewer?...</code> URL + paste-ready iframe for any GLB or avatar session (background, auto-rotate, camera preset or explicit orbit, AR mode, dimensions).</td>
+</tr>
+</tbody></table>
+<h3 id="avatar"><a class="anchor" href="#avatar" aria-label="Link to this section">#</a>Avatar</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>list_avatars</code></td>
+<td>Catalog of default GLB avatars (<code>default</code>, <code>cz</code>), accessories, and pose presets.</td>
+</tr>
+<tr>
+<td><code>list_animations</code></td>
+<td>Live fetch of three.ws&#39;s pose presets (T-pose, wave, thinker, jump, dance, warrior2, …) grouped by category.</td>
+</tr>
+<tr>
+<td><code>spawn_avatar</code></td>
+<td>Creates an avatar session from a preset or custom GLB URL. Returns a <code>sessionId</code>.</td>
+</tr>
+<tr>
+<td><code>dress_avatar</code></td>
+<td>Applies accessories + a pose to a session.</td>
+</tr>
+<tr>
+<td><code>render_avatar</code></td>
+<td>Renders a posed avatar to a PNG — pose preset + camera orbit (theta/phi/radius) + ARKit-52 facial expression.</td>
+</tr>
+<tr>
+<td><code>generate_avatar</code></td>
+<td>Text/image-to-3D via Replicate (Hunyuan-3D). New session preloaded with the generated GLB.</td>
+</tr>
+</tbody></table>
+<h3 id="voice"><a class="anchor" href="#voice" aria-label="Link to this section">#</a>Voice</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>speak</code></td>
+<td>Synthesizes speech in the avatar&#39;s voice — free NVIDIA Magpie TTS lane first (<code>NVIDIA_API_KEY</code>), OpenAI TTS backstop (<code>OPENAI_API_KEY</code>). Returns base64 audio the client plays.</td>
+</tr>
+</tbody></table>
+<h3 id="wallet"><a class="anchor" href="#wallet" aria-label="Link to this section">#</a>Wallet</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>wallet_create</code></td>
+<td>Generates a Solana keypair. Optional vanity grinder (<code>vanityPrefix: &quot;three&quot;</code>). Secret is returned once.</td>
+</tr>
+<tr>
+<td><code>wallet_balance</code></td>
+<td>Reads SOL + all SPL token balances (incl. Token-2022).</td>
+</tr>
+<tr>
+<td><code>wallet_send_preview</code></td>
+<td>Previews a <code>wallet_send</code>: sender, recipient, amount, network fee, balance before and after, and any rule that would refuse it. Signs nothing.</td>
+</tr>
+<tr>
+<td><code>wallet_send</code></td>
+<td>Sends SOL on mainnet. <strong>Execution.</strong></td>
+</tr>
+</tbody></table>
+<h3 id="pumpfun"><a class="anchor" href="#pumpfun" aria-label="Link to this section">#</a>pump.fun</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pump_snapshot</code></td>
+<td>Live market snapshot: USD price (Jupiter), 24h volume + DEX (Dexscreener), pump.fun metadata, top-holder distribution. Pass <code>target: &quot;three&quot;</code> for $THREE when <code>THREE_MINT</code> is set. Read-only, no signer.</td>
+</tr>
+<tr>
+<td><code>pump_buy_quote</code></td>
+<td>Quotes a <code>pump_buy</code> for the exact amount and slippage: SOL spent, expected and minimum tokens, price impact, route and fees. Signs nothing; pass its <code>quote_id</code> to <code>pump_buy</code>.</td>
+</tr>
+<tr>
+<td><code>pump_buy</code></td>
+<td>Jupiter swap, direct or <strong>Jito-bundled</strong> (funder→buyer transfer + swap atomic). Accepts any runtime mint. <strong>Execution.</strong></td>
+</tr>
+<tr>
+<td><code>pump_launch_preview</code></td>
+<td>Previews a <code>pump_launch</code>: funder and creator addresses, rent, dev buy, bundle tip, the funder&#39;s total and any rule that would refuse it. Signs, uploads and mints nothing.</td>
+</tr>
+<tr>
+<td><code>pump_launch</code></td>
+<td><strong>Atomic launch</strong> via Jito bundle: separate funder + creator wallets, both txs in the same block. Uploads metadata to pump.fun IPFS if no URI is supplied. <strong>Execution.</strong></td>
+</tr>
+<tr>
+<td><code>pump_collect_preview</code></td>
+<td>Previews <code>pump_collect_fees</code>: the live fee vault balance, rent kept behind, the exact SOL that would reach the destination, and any rule that would refuse it. Signs nothing.</td>
+</tr>
+<tr>
+<td><code>pump_collect_fees</code></td>
+<td><strong>Atomic collect</strong>: <code>collectCoinCreatorFee</code> + drain to a safe wallet in one tx inside a Jito bundle — resistant to a leaked creator key. <strong>Execution.</strong></td>
+</tr>
+</tbody></table>
+<h3 id="identity"><a class="anchor" href="#identity" aria-label="Link to this section">#</a>Identity</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ens_sns_resolve</code></td>
+<td>Resolves <code>.eth</code> (ENS) and <code>.sol</code> (SNS) names to addresses, with reverse + favorite-domain lookups. SNS is read straight from the SPL Name Service accounts on your <code>SOLANA_RPC_URL</code>, so it depends on no third-party name service.</td>
+</tr>
+</tbody></table>
+<h2 id="how-atomic-pumpfun-works"><a class="anchor" href="#how-atomic-pumpfun-works" aria-label="Link to this section">#</a>How atomic pump.fun works</h2>
+<p>The <code>pump_launch</code> and <code>pump_collect_fees</code> tools wrap two patterns:</p>
+<ul>
+<li><strong>Launch</strong> — the create tx&#39;s <code>payerKey</code> is the <strong>creator</strong> wallet, so the on-chain <code>creator</code> field (which receives pump.fun creator fees forever) is the creator wallet. The creator does not need to hold SOL: the funder transfers rent + tip in Tx1 of the same Jito bundle. Either both txs land or neither does.</li>
+<li><strong>Collect</strong> — even if a creator key is shared or leaked, collect-and-drain runs as a single tx inside a Jito bundle, so no competing collector can interleave a tx between <code>collectCoinCreatorFee</code> and the drain.</li>
+</ul>
+<p>If you start hitting <code>Bundles must write lock at least one tip account</code>, the <a href="https://docs.jito.wtf/">Jito tip-account list</a> has rotated.</p>
+<p>These tools accept an arbitrary mint supplied at runtime — generic plumbing for launching and managing your own coin. <strong>$THREE</strong> (<code>FeMbDoX7R1Psc4GEcvJdsbNbZA3bfztcyDCatJVJpump</code>) is the only coin three.ws promotes.</p>
+<h2 id="requirements"><a class="anchor" href="#requirements" aria-label="Link to this section">#</a>Requirements</h2>
+<ul>
+<li><strong>Node</strong> <code>&gt;=20</code>.</li>
+</ul>
+<p>Per-tool environment variables (all optional — set only what you use):</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Required for</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>SOLANA_RPC_URL</code></td>
+<td>All Solana ops</td>
+<td>Defaults to <code>https://api.mainnet-beta.solana.com</code>. Bring your own (Helius / Quicknode / Triton) for production traffic.</td>
+</tr>
+<tr>
+<td><code>ETH_RPC_URL</code></td>
+<td><code>ens_sns_resolve</code> (<code>.eth</code> lane)</td>
+<td>Strongly recommended. Without it ethers falls back to its shared community endpoints, which are throttled hard enough that <code>.eth</code> lookups routinely time out. <code>.sol</code> needs nothing here. Alias: <code>MAINNET_RPC_URL</code>.</td>
+</tr>
+<tr>
+<td><code>HELIUS_API_KEY</code></td>
+<td><code>pump_snapshot</code> (enhanced)</td>
+<td>Adds exact supply + DAS data.</td>
+</tr>
+<tr>
+<td><code>NVIDIA_API_KEY</code></td>
+<td><code>speak</code> (free lane)</td>
+<td>NVIDIA NIM key (<code>nvapi-…</code>) — leads the TTS provider chain with Magpie TTS.</td>
+</tr>
+<tr>
+<td><code>OPENAI_API_KEY</code></td>
+<td><code>speak</code> (paid backstop)</td>
+<td>Used against <code>api.openai.com/v1/audio/speech</code> when the free lane is unavailable.</td>
+</tr>
+<tr>
+<td><code>REPLICATE_API_TOKEN</code></td>
+<td><code>generate_avatar</code></td>
+<td>Replicate text/image-to-3D.</td>
+</tr>
+<tr>
+<td><code>REPLICATE_TEXT_TO_AVATAR_MODEL</code></td>
+<td><code>generate_avatar</code></td>
+<td>Pin a commercial-OK version, e.g. latest <code>tencent/hunyuan-3d-3.1</code>.</td>
+</tr>
+<tr>
+<td><code>SOLANA_SECRET_KEY</code></td>
+<td><code>wallet_send</code> / <code>pump_buy</code> default signer</td>
+<td>Per-call <code>secret</code> args override. Alias: <code>FUNDER_SECRET</code>. Treat like cash.</td>
+</tr>
+<tr>
+<td><code>THREE_MINT</code></td>
+<td><code>pump_snapshot</code> / <code>pump_buy</code> shorthand</td>
+<td>Set so tools accept <code>target: &quot;three&quot;</code>. Defaults to the canonical $THREE mint.</td>
+</tr>
+<tr>
+<td><code>MAX_SOL_PER_TX</code></td>
+<td>execution tools</td>
+<td>Per-transaction spend cap in SOL. Default <code>0.5</code>.</td>
+</tr>
+<tr>
+<td><code>REQUIRE_CONFIRM</code></td>
+<td>execution tools</td>
+<td>Default on: execution calls refuse until re-issued with <code>confirm: true</code>. Set <code>0</code>/<code>false</code> to disable.</td>
+</tr>
+<tr>
+<td><code>RECIPIENT_ALLOWLIST</code></td>
+<td>execution tools</td>
+<td>Optional comma-separated base58 pubkeys. When set, SOL destinations (<code>wallet_send</code>, the <code>pump_collect_fees</code> drain target) must be in the list.</td>
+</tr>
+<tr>
+<td><code>NAME_RESOLVE_TIMEOUT_MS</code></td>
+<td><code>ens_sns_resolve</code></td>
+<td>Budget for one lane of a name lookup. Default <code>15000</code>. Raise it when pointing at a slow self-hosted RPC.</td>
+</tr>
+<tr>
+<td><code>VIEWER_BASE</code></td>
+<td><code>viewer_url</code></td>
+<td>Defaults to <code>https://three.ws/viewer</code>. Override to point links at a self-hosted viewer.</td>
+</tr>
+<tr>
+<td><code>THREE_WS_BASE</code></td>
+<td>hosted rendering / animation catalog</td>
+<td>Defaults to <code>https://three.ws</code>. Override only when self-hosting the three.ws backend.</td>
+</tr>
+</tbody></table>
+<h2 id="safety"><a class="anchor" href="#safety" aria-label="Link to this section">#</a>Safety</h2>
+<p><code>wallet_send</code>, <code>pump_buy</code>, <code>pump_launch</code>, and <code>pump_collect_fees</code> execute real on-chain transactions. The server makes no judgment about inputs — with a valid signer it does exactly what it is told. Secrets are never logged or persisted; the secret from <code>wallet_create</code> is returned once.</p>
+<p>Four layers keep that power in check:</p>
+<ol>
+<li><strong>Tool annotations</strong> — the four execution tools are flagged <code>destructiveHint: true</code>, so annotation-aware MCP clients (Claude Code, Claude Desktop, Cursor) surface a confirmation prompt before running them. Read-only tools are flagged <code>readOnlyHint: true</code> and can be safely auto-approved.</li>
+<li><strong>Confirmation gate</strong> — with <code>REQUIRE_CONFIRM</code> on (the default), every execution call returns <code>confirmation_required</code> until re-issued with <code>confirm: true</code>, independent of the client.</li>
+<li><strong>Spend caps</strong> — <code>MAX_SOL_PER_TX</code> (default 0.5 SOL) bounds every send, buy, tip, and drain server-side. Enforced in the signing libs themselves, so every path — direct, bundled, atomic — is covered.</li>
+<li><strong>Recipient allowlist</strong> — set <code>RECIPIENT_ALLOWLIST</code> and any SOL destination outside the list is refused before a transaction is built.</li>
+</ol>
+<h2 id="errors"><a class="anchor" href="#errors" aria-label="Link to this section">#</a>Errors</h2>
+<p>A failed tool call returns an MCP error result (<code>isError: true</code>) whose text is a single JSON object — <code>{ &quot;ok&quot;: false, &quot;error&quot;: &quot;&lt;code&gt;&quot;, &quot;message&quot;: &quot;…&quot; }</code>, plus <code>status</code> or the on-chain <code>signature</code> when available:</p>
+<table>
+<thead>
+<tr>
+<th><code>error</code></th>
+<th>Meaning</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>confirmation_required</code></td>
+<td>An execution tool was called without <code>confirm: true</code> while <code>REQUIRE_CONFIRM</code> is on. Returned as a normal (non-error) result — a deliberate refusal, not a failure.</td>
+<td>Re-issue the same call with <code>confirm: true</code>.</td>
+</tr>
+<tr>
+<td><code>over_spend_cap</code></td>
+<td>The requested SOL amount exceeds <code>MAX_SOL_PER_TX</code>.</td>
+<td>Lower the amount, or raise <code>MAX_SOL_PER_TX</code> in the server env (you accept the risk).</td>
+</tr>
+<tr>
+<td><code>recipient_not_allowed</code></td>
+<td><code>RECIPIENT_ALLOWLIST</code> is set and the destination isn&#39;t in it.</td>
+<td>Send to an allowlisted address or extend the list.</td>
+</tr>
+<tr>
+<td><code>invalid_amount</code></td>
+<td>A zero, negative, or non-numeric SOL amount.</td>
+<td>Pass a positive number.</td>
+</tr>
+<tr>
+<td><code>vault_too_small</code> / <code>nothing_to_drain</code></td>
+<td><code>pump_collect_fees</code> found no (or dust-level) creator fees to collect.</td>
+<td>Nothing to do — check back after more trading volume.</td>
+</tr>
+<tr>
+<td><code>simulation_failed</code></td>
+<td>The transaction failed Solana preflight simulation; nothing was broadcast.</td>
+<td>The message carries the program logs — fix the underlying cause and retry.</td>
+</tr>
+<tr>
+<td><code>bad_rpc_url</code> / <code>insecure_rpc_url</code></td>
+<td><code>SOLANA_RPC_URL</code> is malformed or plain-http on a non-localhost host.</td>
+<td>Use an <code>https://</code> RPC endpoint (or <code>http://localhost</code> for a local validator).</td>
+</tr>
+<tr>
+<td><code>bad_policy_config</code></td>
+<td><code>MAX_SOL_PER_TX</code> (or another policy var) is not a non-negative number.</td>
+<td>Fix the env var value.</td>
+</tr>
+</tbody></table>
+<p>Execution errors that occur after broadcast include the transaction <code>signature</code> so you can verify the final on-chain state before retrying — never assume a failed response means no funds moved.</p>
+<h2 id="links"><a class="anchor" href="#links" aria-label="Link to this section">#</a>Links</h2>
+<ul>
+<li>Homepage: <a href="https://three.ws">https://three.ws</a></li>
+<li>Sibling package: <a href="https://www.npmjs.com/package/@three-ws/avatar-mcp"><code>@three-ws/avatar-mcp</code></a> — live, read-only avatar viewer for MCP</li>
+<li>Changelog: <a href="https://three.ws/changelog">https://three.ws/changelog</a></li>
+<li>Issues: <a href="https://github.com/nirholas/three.ws/issues">https://github.com/nirholas/three.ws/issues</a></li>
+<li>License: Apache-2.0, see <a href="https://github.com/nirholas/avatar-agent-mcp/blob/main/LICENSE">LICENSE</a></li>
+</ul>
+<hr>
+<p align="center">
+  <sub>
+    Part of the <a href="https://three.ws">three.ws</a> SDK suite — 3D AI agents, on-chain identity, and agent payments.<br/>
+    <a href="https://three.ws">Website</a> · <a href="https://three.ws/changelog">Changelog</a> · <a href="https://github.com/nirholas/three.ws">GitHub</a>
+  </sub>
+</p>
+</main>
+<nav class="toc" aria-label="On this page"><p>On this page</p><ul><li><a href="#install">Install</a></li><li><a href="#setup">Setup</a></li><li><a href="#quick-start">Quick start</a></li><li><a href="#tools">Tools</a></li><li><a href="#how-atomic-pumpfun-works">How atomic pump.fun works</a></li><li><a href="#requirements">Requirements</a></li><li><a href="#safety">Safety</a></li><li><a href="#errors">Errors</a></li><li><a href="#links">Links</a></li></ul></nav>
+</div>
+<footer><div class="foot-in"><span>Apache-2.0 licensed</span><a href="https://github.com/nirholas/avatar-agent-mcp/issues">Issues</a><a href="https://github.com/nirholas/avatar-agent-mcp/blob/main/CONTRIBUTING.md">Contributing</a><a href="https://github.com/nirholas/avatar-agent-mcp/security/policy">Security</a><a href="https://three.ws">Part of three.ws</a></div></footer>
+<script>document.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',function(){
+var t=b.getAttribute('data-copy');var done=function(){var o=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=o},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){})}
+else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove()}})});</script>
+</body>
+</html>

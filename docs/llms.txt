@@ -1,0 +1,20 @@
+# @three-ws/avatar-agent
+
+> 3D AI Agent Avatar — MCP server that spawns a textured GLB avatar, inspects/validates/optimizes any 3D model, gives the agent a Solana wallet + a voice, and ships full pump.fun powers (atomic Jito-bundled launches + creator-fee collection). Powered by three.ws.
+
+@three-ws/avatar-agent is a Model Context Protocol server from three.ws. Install: `npx -y @three-ws/avatar-agent`.
+
+## Docs
+
+- [README](https://github.com/nirholas/avatar-agent-mcp/blob/main/README.md): install, configuration, full reference
+- [Documentation site](https://nirholas.github.io/avatar-agent-mcp/): the README as a web page
+- [Full text for LLMs](https://nirholas.github.io/avatar-agent-mcp/llms-full.txt): README inlined
+- [AGENTS.md](https://github.com/nirholas/avatar-agent-mcp/blob/main/AGENTS.md): guidance for coding agents
+
+## Project
+
+- [Source](https://github.com/nirholas/avatar-agent-mcp)
+- [npm](https://www.npmjs.com/package/@three-ws/avatar-agent)
+- [three.ws](https://three.ws): the platform this is part of
+- [Issues](https://github.com/nirholas/avatar-agent-mcp/issues)
+- [MCP Registry](https://registry.modelcontextprotocol.io/?q=io.github.nirholas%2F3D-AI-Agent-Avatar)
