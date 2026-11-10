@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "avatar-agent": {
+      "command": "npx",
+      "args": ["-y", "-p", "@three-ws/avatar-agent", "three-avatar-agent-mcp"],
+      "env": {
+        "NVIDIA_API_KEY": "${NVIDIA_API_KEY:-}",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY:-}"
+      }
+    }
+  }
+}
